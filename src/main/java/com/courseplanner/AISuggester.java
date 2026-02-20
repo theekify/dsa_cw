@@ -32,9 +32,7 @@ public class AISuggester {
         this.completedCourses = new ArrayList<>(completedCourses);
     }
 
-    /**
-     * Set student grades
-     */
+
     public void setGrades(HashMap<String, Double> grades) {
         this.grades = new HashMap<>(grades);
     }
@@ -295,3 +293,4 @@ public class AISuggester {
     }
 
 }
+
