@@ -7,11 +7,14 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -23,6 +26,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 public class CoursePlannerGUI {
@@ -89,7 +93,12 @@ public class CoursePlannerGUI {
         // Tab 1: Course Table
         JPanel tablePanel = new JPanel(new BorderLayout());
         String[] columnNames = {"Code", "Name", "Credits", "Completed", "Grade", "Prerequisites"};
-        tableModel = new DefaultTableModel(columnNames, 0);
+        tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         courseTable = new JTable(tableModel);
         JScrollPane tableScrollPane = new JScrollPane(courseTable);
         tablePanel.add(tableScrollPane, BorderLayout.CENTER);
@@ -212,7 +221,7 @@ public class CoursePlannerGUI {
         List<Course> courses = plannerApp.courseTree.inOrderTraversal();
         for (Course course : courses) {
             List<String> prereqs = plannerApp.prerequisiteGraph.getPrerequisites(course.getCode());
-            String prereqStr = String.join(", ", prereqs);
+            String prereqStr = prereqs.isEmpty() ? "None" : String.join(", ", prereqs);
             
             Object[] row = {
                 course.getCode(),
@@ -251,14 +260,40 @@ public class CoursePlannerGUI {
             "Enter course code:", "Check Prerequisites", JOptionPane.QUESTION_MESSAGE);
         
         if (courseCode != null && !courseCode.trim().isEmpty()) {
-            // Simulate checking prerequisites (you'd call your actual method)
-            outputArea.setText("Checking prerequisites for: " + courseCode + "\n\n");
+            courseCode = courseCode.trim().toUpperCase();
             
-            // In real app, call: plannerApp.checkPrerequisites(courseCode)
-            // For demo, show sample output
-            outputArea.append("✓ Course found: " + courseCode + "\n");
-            outputArea.append("✓ Prerequisites checked\n");
-            outputArea.append("✓ Result: You CAN take this course!\n");
+            StringBuilder sb = new StringBuilder();
+            sb.append("CHECKING PREREQUISITES FOR: ").append(courseCode).append("\n");
+            sb.append("=".repeat(50)).append("\n\n");
+            
+            // Check if course exists
+            Course course = plannerApp.courseTree.search(courseCode);
+            if (course == null) {
+                sb.append("❌ Course not found: ").append(courseCode);
+                outputArea.setText(sb.toString());
+                return;
+            }
+            
+            sb.append("Course: ").append(course.getName()).append("\n");
+            sb.append("Credits: ").append(course.getCredits()).append("\n\n");
+            
+            // Check prerequisites using PlanGenerator
+            List<String> missing = plannerApp.planGenerator.getMissingPrerequisites(courseCode);
+            
+            if (missing.isEmpty()) {
+                sb.append("✅ ALL PREREQUISITES SATISFIED!\n");
+                sb.append("You can take this course.");
+            } else {
+                sb.append("❌ MISSING PREREQUISITES:\n");
+                for (String prereq : missing) {
+                    Course prereqCourse = plannerApp.courseTree.search(prereq);
+                    String prereqName = (prereqCourse != null) ? prereqCourse.getName() : "Unknown";
+                    sb.append("  • ").append(prereq).append(": ").append(prereqName).append("\n");
+                }
+                sb.append("\nComplete these prerequisites first.");
+            }
+            
+            outputArea.setText(sb.toString());
         }
     }
     
@@ -275,24 +310,37 @@ public class CoursePlannerGUI {
             }
         }
         
+        // Use PlanGenerator to generate actual plan
+        List<List<Course>> plan = plannerApp.planGenerator.generatePlan();
+        
         StringBuilder sb = new StringBuilder();
         sb.append("STUDY PLAN (Max ").append(maxCredits).append(" credits/semester)\n");
         sb.append("=".repeat(60)).append("\n\n");
         
-        // Sample plan for demo
-        sb.append("SEMESTER 1 (15 credits)\n");
-        sb.append("-".repeat(30)).append("\n");
-        sb.append("• CS101: Programming Fundamentals (3)\n");
-        sb.append("• MATH101: Calculus I (4)\n");
-        sb.append("• ENG101: English Composition (3)\n");
-        sb.append("• SCI101: General Science (4)\n\n");
-        
-        sb.append("SEMESTER 2 (16 credits)\n");
-        sb.append("-".repeat(30)).append("\n");
-        sb.append("• CS102: Object-Oriented Programming (3)\n");
-        sb.append("• CS201: Data Structures (3)\n");
-        sb.append("• MATH201: Calculus II (4)\n");
-        sb.append("• HUM101: Humanities (3)\n\n");
+        if (plan.isEmpty()) {
+            sb.append("No courses available for planning.\n");
+            sb.append("Add courses first using 'Manage Courses'.");
+        } else {
+            int totalCredits = 0;
+            for (int i = 0; i < plan.size(); i++) {
+                List<Course> semester = plan.get(i);
+                int semesterCredits = semester.stream().mapToInt(Course::getCredits).sum();
+                totalCredits += semesterCredits;
+                
+                sb.append("SEMESTER ").append(i + 1).append(" (").append(semesterCredits).append(" credits)\n");
+                sb.append("-".repeat(40)).append("\n");
+                
+                for (Course course : semester) {
+                    sb.append("• ").append(course.getCode()).append(": ")
+                      .append(course.getName()).append(" (").append(course.getCredits()).append(" credits)\n");
+                }
+                sb.append("\n");
+            }
+            
+            sb.append("=".repeat(60)).append("\n");
+            sb.append("TOTAL: ").append(plan.size()).append(" semesters, ")
+              .append(totalCredits).append(" credits\n");
+        }
         
         outputArea.setText(sb.toString());
     }
@@ -311,39 +359,74 @@ public class CoursePlannerGUI {
             }
         }
         
+        // Use AISuggester to get actual suggestions
+        List<Course> suggestions = plannerApp.aiSuggester.suggestElectives(count);
+        
         StringBuilder sb = new StringBuilder();
         sb.append("🤖 AI COURSE SUGGESTIONS\n");
         sb.append("=".repeat(50)).append("\n\n");
         
-        // Sample suggestions for demo
-        sb.append("1. CS201: Data Structures (Score: 87/100)\n");
-        sb.append("   Why: Excellent in prerequisites (85%) • Matches programming interest\n\n");
-        
-        sb.append("2. CS402: Web Development (Score: 75/100)\n");
-        sb.append("   Why: Good prerequisite performance • Manageable difficulty\n\n");
-        
-        sb.append("3. MATH201: Calculus II (Score: 68/100)\n");
-        sb.append("   Why: Excellent in MATH101 (92%) • Important for future courses\n\n");
+        if (suggestions.isEmpty()) {
+            sb.append("No suggestions available.\n");
+            sb.append("Complete some courses first to get personalized suggestions.");
+        } else {
+            for (int i = 0; i < suggestions.size(); i++) {
+                Course course = suggestions.get(i);
+                String explanation = plannerApp.aiSuggester.getSuggestionExplanation(course);
+                
+                sb.append(i + 1).append(". ").append(course.getCode()).append(": ")
+                  .append(course.getName()).append("\n");
+                sb.append("   Why: ").append(explanation).append("\n\n");
+            }
+        }
         
         outputArea.setText(sb.toString());
     }
     
     private void exportPlanDialog() {
-        String[] options = {"Text File (.txt)", "CSV File (.csv)", "Calendar File (.ics)", "Cancel"};
-        int choice = JOptionPane.showOptionDialog(mainFrame,
-            "Choose export format:",
-            "Export Plan",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.INFORMATION_MESSAGE,
-            null,
-            options,
-            options[0]);
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Export Study Plan");
         
-        if (choice < 3) {
-            JOptionPane.showMessageDialog(mainFrame,
-                "✓ Plan exported successfully as " + options[choice],
-                "Export Complete",
-                JOptionPane.INFORMATION_MESSAGE);
+        FileNameExtensionFilter txtFilter = new FileNameExtensionFilter("Text Files (*.txt)", "txt");
+        FileNameExtensionFilter csvFilter = new FileNameExtensionFilter("CSV Files (*.csv)", "csv");
+        
+        fileChooser.addChoosableFileFilter(txtFilter);
+        fileChooser.addChoosableFileFilter(csvFilter);
+        fileChooser.setFileFilter(txtFilter);
+        
+        int userSelection = fileChooser.showSaveDialog(mainFrame);
+        
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            
+            try {
+                // Get current plan
+                List<List<Course>> plan = plannerApp.planGenerator.generatePlan();
+                
+                if (fileChooser.getFileFilter() == txtFilter) {
+                    String path = fileToSave.getAbsolutePath();
+                    if (!path.toLowerCase().endsWith(".txt")) {
+                        path += ".txt";
+                    }
+                    PlanExporter.exportToTextFile(plan, path);
+                } else if (fileChooser.getFileFilter() == csvFilter) {
+                    String path = fileToSave.getAbsolutePath();
+                    if (!path.toLowerCase().endsWith(".csv")) {
+                        path += ".csv";
+                    }
+                    PlanExporter.exportToCSV(plan, path);
+                }
+                
+                JOptionPane.showMessageDialog(mainFrame,
+                    "✓ Plan exported successfully!",
+                    "Export Complete",
+                    JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(mainFrame,
+                    "Error exporting: " + e.getMessage(),
+                    "Export Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
     
@@ -351,14 +434,24 @@ public class CoursePlannerGUI {
         outputArea.setText("🔍 DETECTING PREREQUISITE CYCLES\n");
         outputArea.append("=".repeat(50) + "\n\n");
         
-        // Sample output for demo
-        outputArea.append("✓ Analyzing prerequisite graph...\n\n");
-        outputArea.append("✓ No circular dependencies found!\n");
-        outputArea.append("✓ All prerequisite chains are valid.\n\n");
-        outputArea.append("Prerequisite Graph:\n");
-        outputArea.append("CS101 → CS102 → CS201 → CS301\n");
-        outputArea.append("MATH101 → MATH201 → MATH301\n");
-        outputArea.append("CS301 → CS401\n");
+        boolean hasCycle = plannerApp.prerequisiteGraph.hasCycle();
+        
+        if (!hasCycle) {
+            outputArea.append("✅ No circular dependencies found!\n");
+            outputArea.append("All prerequisite chains are valid.\n\n");
+        } else {
+            outputArea.append("❌ CIRCULAR DEPENDENCY DETECTED!\n\n");
+            List<String> cycle = plannerApp.prerequisiteGraph.getCyclePath();
+            
+            outputArea.append("Cycle: ");
+            for (int i = 0; i < cycle.size(); i++) {
+                outputArea.append(cycle.get(i));
+                if (i < cycle.size() - 1) {
+                    outputArea.append(" → ");
+                }
+            }
+            outputArea.append("\n\nThis creates an impossible situation!");
+        }
     }
     
     private void manageCompletedDialog() {
@@ -385,9 +478,25 @@ public class CoursePlannerGUI {
                 try {
                     double grade = Double.parseDouble(gradeStr);
                     if (grade >= 0 && grade <= 100) {
-                        outputArea.setText("✓ Marked " + courseCode + " as completed with grade " + grade + "%\n");
-                        outputArea.append("\nCourse status updated successfully!");
-                        refreshAll();
+                        Course course = plannerApp.courseTree.search(courseCode);
+                        if (course != null) {
+                            course.setCompleted(true);
+                            course.setGrade(grade);
+                            
+                            // Update lists in plannerApp
+                            plannerApp.completedCourses.add(courseCode);
+                            plannerApp.grades.put(courseCode, grade);
+                            
+                            // Update components
+                            plannerApp.planGenerator.setCompletedCourses(plannerApp.completedCourses);
+                            plannerApp.aiSuggester.setCompletedCourses(plannerApp.completedCourses);
+                            plannerApp.aiSuggester.setGrades(plannerApp.grades);
+                            
+                            outputArea.setText("✓ Marked " + courseCode + " as completed with grade " + grade + "%\n");
+                            refreshAll();
+                        } else {
+                            JOptionPane.showMessageDialog(mainFrame, "Course not found!");
+                        }
                     } else {
                         JOptionPane.showMessageDialog(mainFrame, "Grade must be between 0-100");
                     }
@@ -399,7 +508,7 @@ public class CoursePlannerGUI {
     }
     
     private void manageCoursesDialog() {
-        String[] options = {"Add New Course", "Add Prerequisite", "View Graph", "Cancel"};
+        String[] options = {"Add New Course", "Add Prerequisite", "Cancel"};
         int choice = JOptionPane.showOptionDialog(mainFrame,
             "Course Management Options:",
             "Manage Courses",
@@ -411,7 +520,7 @@ public class CoursePlannerGUI {
         
         if (choice == 0) {
             // Add new course
-            JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
+            JPanel panel = new JPanel(new GridLayout(4, 2, 5, 5));
             JTextField codeField = new JTextField();
             JTextField nameField = new JTextField();
             JTextField creditsField = new JTextField("3");
@@ -422,6 +531,8 @@ public class CoursePlannerGUI {
             panel.add(nameField);
             panel.add(new JLabel("Credits:"));
             panel.add(creditsField);
+            panel.add(new JLabel(""));
+            panel.add(new JLabel(""));
             
             int result = JOptionPane.showConfirmDialog(mainFrame, panel,
                 "Add New Course", JOptionPane.OK_CANCEL_OPTION);
@@ -429,10 +540,48 @@ public class CoursePlannerGUI {
             if (result == JOptionPane.OK_OPTION) {
                 String code = codeField.getText().toUpperCase().trim();
                 String name = nameField.getText().trim();
-                String creditsStr = creditsField.getText().trim();
                 
-                if (!code.isEmpty() && !name.isEmpty()) {
+                try {
+                    int credits = Integer.parseInt(creditsField.getText().trim());
+                    
+                    Course course = new Course(code, name, credits);
+                    plannerApp.courseTree.insert(course);
+                    
                     outputArea.setText("✓ Added new course: " + code + " - " + name + "\n");
+                    refreshAll();
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(mainFrame, "Invalid credits value");
+                }
+            }
+        } else if (choice == 1) {
+            // Add prerequisite
+            JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
+            JTextField courseField = new JTextField();
+            JTextField prereqField = new JTextField();
+            
+            panel.add(new JLabel("Course Code:"));
+            panel.add(courseField);
+            panel.add(new JLabel("Prerequisite:"));
+            panel.add(prereqField);
+            panel.add(new JLabel(""));
+            panel.add(new JLabel(""));
+            
+            int result = JOptionPane.showConfirmDialog(mainFrame, panel,
+                "Add Prerequisite", JOptionPane.OK_CANCEL_OPTION);
+            
+            if (result == JOptionPane.OK_OPTION) {
+                String course = courseField.getText().toUpperCase().trim();
+                String prereq = prereqField.getText().toUpperCase().trim();
+                
+                if (!course.isEmpty() && !prereq.isEmpty()) {
+                    plannerApp.prerequisiteGraph.addPrerequisite(course, prereq);
+                    
+                    if (!plannerApp.prerequisiteGraph.hasCycle()) {
+                        outputArea.setText("✓ Added prerequisite: " + prereq + " → " + course + "\n");
+                    } else {
+                        JOptionPane.showMessageDialog(mainFrame, 
+                            "⚠ Warning: This creates a cycle!", "Cycle Detected", JOptionPane.WARNING_MESSAGE);
+                    }
                     refreshAll();
                 }
             }
@@ -444,40 +593,68 @@ public class CoursePlannerGUI {
         sb.append("👤 STUDENT PROFILE\n");
         sb.append("=".repeat(50)).append("\n\n");
         
-        // Sample data for demo
+        List<Course> allCourses = plannerApp.courseTree.inOrderTraversal();
+        long completed = allCourses.stream().filter(Course::isCompleted).count();
+        
+        double avgGrade = plannerApp.grades.values().stream()
+            .mapToDouble(Double::doubleValue)
+            .average()
+            .orElse(0.0);
+        
         sb.append("PROGRESS SUMMARY:\n");
         sb.append("-".repeat(30)).append("\n");
-        sb.append("Total Courses: 20\n");
-        sb.append("Completed: 4 (20.0%)\n");
-        sb.append("Remaining: 16\n");
-        sb.append("Average Grade: 85.8%\n\n");
+        sb.append("Total Courses: ").append(allCourses.size()).append("\n");
+        sb.append("Completed: ").append(completed).append("\n");
+        sb.append("Completion: ").append(String.format("%.1f%%", 
+            allCourses.isEmpty() ? 0 : (completed * 100.0 / allCourses.size()))).append("\n");
+        sb.append("Average Grade: ").append(String.format("%.1f%%", avgGrade)).append("\n\n");
         
-        sb.append("INTERESTS:\n");
-        sb.append("-".repeat(30)).append("\n");
-        sb.append("• Programming\n");
-        sb.append("• Web Development\n\n");
+        if (!plannerApp.interests.isEmpty()) {
+            sb.append("INTERESTS:\n");
+            sb.append("-".repeat(30)).append("\n");
+            for (String interest : plannerApp.interests) {
+                sb.append("• ").append(interest).append("\n");
+            }
+            sb.append("\n");
+        }
         
         sb.append("RECOMMENDED NEXT:\n");
         sb.append("-".repeat(30)).append("\n");
-        sb.append("1. CS201: Data Structures\n");
-        sb.append("2. MATH201: Calculus II\n");
-        sb.append("3. CS102: Object-Oriented Programming\n");
+        List<Course> suggestions = plannerApp.aiSuggester.suggestElectives(3);
+        if (suggestions.isEmpty()) {
+            sb.append("Complete more courses for recommendations.\n");
+        } else {
+            for (int i = 0; i < suggestions.size(); i++) {
+                Course c = suggestions.get(i);
+                sb.append(i + 1).append(". ").append(c.getCode()).append(": ")
+                  .append(c.getName()).append("\n");
+            }
+        }
         
         outputArea.setText(sb.toString());
     }
     
     private void saveProgress() {
-        int choice = JOptionPane.showConfirmDialog(mainFrame,
-            "Save all progress to file?", "Save Progress", JOptionPane.YES_NO_OPTION);
-        
-        if (choice == JOptionPane.YES_OPTION) {
+        try {
+            PlanExporter.saveProgress(
+                plannerApp.completedCourses,
+                plannerApp.grades,
+                plannerApp.interests,
+                "student_progress.txt"
+            );
+            
             JOptionPane.showMessageDialog(mainFrame,
                 "✓ Progress saved successfully!\n\n" +
-                "• 4 completed courses\n" +
-                "• 4 grades recorded\n" +
-                "• 2 interests saved",
+                "• " + plannerApp.completedCourses.size() + " completed courses\n" +
+                "• " + plannerApp.grades.size() + " grades recorded\n" +
+                "• " + plannerApp.interests.size() + " interests",
                 "Save Complete",
                 JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(mainFrame,
+                "Error saving: " + e.getMessage(),
+                "Save Error",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -492,22 +669,22 @@ public class CoursePlannerGUI {
             .filter(c -> !plannerApp.prerequisiteGraph.getPrerequisites(c.getCode()).isEmpty())
             .count();
         
+        double avgGrade = plannerApp.grades.values().stream()
+            .mapToDouble(Double::doubleValue)
+            .average()
+            .orElse(0.0);
+        
         sb.append("Course Statistics:\n");
         sb.append("-".repeat(30)).append("\n");
         sb.append("Total Courses: ").append(courses.size()).append("\n");
         sb.append("Completed: ").append(completed).append("\n");
+        sb.append("Average Grade: ").append(String.format("%.1f%%", avgGrade)).append("\n");
         sb.append("With Prerequisites: ").append(withPrereqs).append("\n");
         sb.append("Without Prerequisites: ").append(courses.size() - withPrereqs).append("\n\n");
         
-        sb.append("Credit Distribution:\n");
+        sb.append("Graph Statistics:\n");
         sb.append("-".repeat(30)).append("\n");
-        long threeCredit = courses.stream().filter(c -> c.getCredits() == 3).count();
-        long fourCredit = courses.stream().filter(c -> c.getCredits() == 4).count();
-        long otherCredit = courses.stream().filter(c -> c.getCredits() != 3 && c.getCredits() != 4).count();
-        
-        sb.append("3-credit courses: ").append(threeCredit).append("\n");
-        sb.append("4-credit courses: ").append(fourCredit).append("\n");
-        sb.append("Other credits: ").append(otherCredit).append("\n");
+        sb.append("Has Cycles: ").append(plannerApp.prerequisiteGraph.hasCycle() ? "Yes" : "No").append("\n");
         
         outputArea.setText(sb.toString());
     }
@@ -516,10 +693,39 @@ public class CoursePlannerGUI {
         String selected = (String) courseComboBox.getSelectedItem();
         if (selected != null) {
             String courseCode = selected.split(" - ")[0];
-            outputArea.setText("Checking prerequisites for: " + courseCode + "\n\n");
-            outputArea.append("✓ Course found in system\n");
-            outputArea.append("✓ Checking prerequisites...\n");
-            outputArea.append("✓ Result: You CAN take this course!\n");
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append("CHECKING: ").append(courseCode).append("\n\n");
+            
+            Course course = plannerApp.courseTree.search(courseCode);
+            if (course == null) {
+                sb.append("Course not found.");
+                outputArea.setText(sb.toString());
+                return;
+            }
+            
+            sb.append("Course: ").append(course.getName()).append("\n");
+            sb.append("Credits: ").append(course.getCredits()).append("\n");
+            sb.append("Status: ").append(course.isCompleted() ? "Completed ✓" : "Not completed ○").append("\n\n");
+            
+            sb.append("PREREQUISITES:\n");
+            List<String> prereqs = plannerApp.prerequisiteGraph.getPrerequisites(courseCode);
+            
+            if (prereqs.isEmpty()) {
+                sb.append("None\n");
+            } else {
+                for (String prereq : prereqs) {
+                    Course prereqCourse = plannerApp.courseTree.search(prereq);
+                    String status = plannerApp.completedCourses.contains(prereq) ? "✓" : "✗";
+                    sb.append("  ").append(status).append(" ").append(prereq);
+                    if (prereqCourse != null) {
+                        sb.append(": ").append(prereqCourse.getName());
+                    }
+                    sb.append("\n");
+                }
+            }
+            
+            outputArea.setText(sb.toString());
         }
     }
     
@@ -535,8 +741,27 @@ public class CoursePlannerGUI {
                 try {
                     double grade = Double.parseDouble(gradeStr);
                     if (grade >= 0 && grade <= 100) {
-                        outputArea.setText("✓ Marked " + courseCode + " as completed with grade " + grade + "%\n");
-                        refreshAll();
+                        Course course = plannerApp.courseTree.search(courseCode);
+                        if (course != null) {
+                            course.setCompleted(true);
+                            course.setGrade(grade);
+                            
+                            // Update lists
+                            if (!plannerApp.completedCourses.contains(courseCode)) {
+                                plannerApp.completedCourses.add(courseCode);
+                            }
+                            plannerApp.grades.put(courseCode, grade);
+                            
+                            // Update components
+                            plannerApp.planGenerator.setCompletedCourses(plannerApp.completedCourses);
+                            plannerApp.aiSuggester.setCompletedCourses(plannerApp.completedCourses);
+                            plannerApp.aiSuggester.setGrades(plannerApp.grades);
+                            
+                            outputArea.setText("✓ Marked " + courseCode + " as completed with grade " + grade + "%\n");
+                            refreshAll();
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(mainFrame, "Grade must be between 0-100");
                     }
                 } catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(mainFrame, "Invalid grade");
@@ -549,18 +774,48 @@ public class CoursePlannerGUI {
         String selected = (String) courseComboBox.getSelectedItem();
         if (selected != null) {
             String courseCode = selected.split(" - ")[0];
+            String courseName = selected.split(" - ")[1];
             
             StringBuilder sb = new StringBuilder();
             sb.append("📄 COURSE DETAILS\n");
             sb.append("=".repeat(50)).append("\n\n");
-            sb.append("Code: ").append(courseCode).append("\n");
-            sb.append("Name: ").append(selected.split(" - ")[1]).append("\n\n");
             
-            // In real app, get actual course details
-            sb.append("Status: Not completed\n");
-            sb.append("Prerequisites: CS101, MATH101\n");
-            sb.append("Required for: CS301, CS302\n");
-            sb.append("Difficulty: Medium (3 credits)\n");
+            Course course = plannerApp.courseTree.search(courseCode);
+            if (course == null) {
+                sb.append("Course not found.");
+                outputArea.setText(sb.toString());
+                return;
+            }
+            
+            sb.append("Code: ").append(course.getCode()).append("\n");
+            sb.append("Name: ").append(course.getName()).append("\n");
+            sb.append("Credits: ").append(course.getCredits()).append("\n");
+            sb.append("Status: ").append(course.isCompleted() ? 
+                "Completed ✓ (Grade: " + String.format("%.1f%%", course.getGrade()) + ")" : 
+                "Not completed ○").append("\n\n");
+            
+            List<String> prereqs = plannerApp.prerequisiteGraph.getPrerequisites(courseCode);
+            sb.append("PREREQUISITES:\n");
+            sb.append("-".repeat(20)).append("\n");
+            if (prereqs.isEmpty()) {
+                sb.append("None\n");
+            } else {
+                for (String prereq : prereqs) {
+                    sb.append("• ").append(prereq).append("\n");
+                }
+            }
+            sb.append("\n");
+            
+            List<String> dependents = plannerApp.prerequisiteGraph.getDependentCourses(courseCode);
+            sb.append("REQUIRED FOR:\n");
+            sb.append("-".repeat(20)).append("\n");
+            if (dependents.isEmpty()) {
+                sb.append("None\n");
+            } else {
+                for (String dependent : dependents) {
+                    sb.append("• ").append(dependent).append("\n");
+                }
+            }
             
             outputArea.setText(sb.toString());
         }
