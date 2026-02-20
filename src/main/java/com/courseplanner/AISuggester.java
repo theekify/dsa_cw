@@ -16,9 +16,7 @@ public class AISuggester {
     private HashMap<String, Double> grades;
     private List<String> interests;
 
-    /**
-     * Constructor
-     */
+    
     public AISuggester(CourseBST courseTree, PrerequisiteGraph graph) {
         this.courseTree = courseTree;
         this.graph = graph;
@@ -34,9 +32,7 @@ public class AISuggester {
         this.completedCourses = new ArrayList<>(completedCourses);
     }
 
-    /**
-     * Set student grades
-     */
+
     public void setGrades(HashMap<String, Double> grades) {
         this.grades = new HashMap<>(grades);
     }
@@ -295,4 +291,6 @@ public class AISuggester {
             return score;
         }
     }
+
 }
+

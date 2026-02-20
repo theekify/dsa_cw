@@ -45,6 +45,8 @@ public class CoursePlannerGUI {
     // Modern color palette
     private static final Color BG_PRIMARY = new Color(255, 255, 255);
     private static final Color BG_SECONDARY = new Color(249, 250, 251);
+    private static final Color ACCENT_PRIMARY = new Color(79, 70, 229); // Indigo
+    private static final Color ACCENT_HOVER = new Color(67, 56, 202); // Darker indigo
     private static final Color ACCENT_PRIMARY = new Color(79, 70, 229);
     private static final Color ACCENT_HOVER = new Color(67, 56, 202);
     private static final Color TEXT_PRIMARY = new Color(17, 24, 39);
@@ -69,6 +71,7 @@ public class CoursePlannerGUI {
     }
     
     private void createGUI() {
+        // Set system look and feel as base, then customize
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
@@ -102,6 +105,9 @@ public class CoursePlannerGUI {
         // Modern Status Bar
         JPanel statusBar = createStatusBar();
         mainFrame.add(statusBar, BorderLayout.SOUTH);
+        
+        // Show initial setup dialog
+        SwingUtilities.invokeLater(() -> showInitialSetupDialog());
         
         // Load initial data
         refreshAll();
@@ -584,6 +590,7 @@ public class CoursePlannerGUI {
         }
     }
     
+    // All your existing functionality methods remain exactly the same
     private void refreshAll() {
         courseComboBox.removeAllItems();
         List<Course> courses = plannerApp.courseTree.inOrderTraversal();
