@@ -21,6 +21,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -46,6 +47,8 @@ public class CoursePlannerGUI {
     private static final Color BG_SECONDARY = new Color(249, 250, 251);
     private static final Color ACCENT_PRIMARY = new Color(79, 70, 229); // Indigo
     private static final Color ACCENT_HOVER = new Color(67, 56, 202); // Darker indigo
+    private static final Color ACCENT_PRIMARY = new Color(79, 70, 229);
+    private static final Color ACCENT_HOVER = new Color(67, 56, 202);
     private static final Color TEXT_PRIMARY = new Color(17, 24, 39);
     private static final Color TEXT_SECONDARY = new Color(107, 114, 128);
     private static final Color BORDER_COLOR = new Color(229, 231, 235);
@@ -62,6 +65,9 @@ public class CoursePlannerGUI {
     public CoursePlannerGUI() {
         plannerApp = new CoursePlannerApp();
         createGUI();
+        
+        // Show welcome dialog after GUI is created
+        SwingUtilities.invokeLater(() -> showWelcomeDialog());
     }
     
     private void createGUI() {
@@ -109,52 +115,97 @@ public class CoursePlannerGUI {
         mainFrame.setVisible(true);
     }
     
-    private void showInitialSetupDialog() {
-        JPanel panel = new JPanel(new GridLayout(5, 1, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    private void showWelcomeDialog() {
+        JPanel panel = new JPanel(new BorderLayout(10, 20));
+        panel.setBackground(BG_PRIMARY);
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
         
-        JLabel welcomeLabel = new JLabel("Welcome to Course Planner!");
-        welcomeLabel.setFont(new Font("Inter", Font.BOLD, 16));
+        // Welcome message
+        JLabel welcomeLabel = new JLabel("🎓 Welcome to Course Planner!");
+        welcomeLabel.setFont(new Font("Inter", Font.BOLD, 24));
+        welcomeLabel.setForeground(ACCENT_PRIMARY);
+        welcomeLabel.setHorizontalAlignment(JLabel.CENTER);
         
-        JLabel questionLabel = new JLabel("Would you like to mark any courses as completed?");
+        JLabel subLabel = new JLabel("Let's set up your academic profile");
+        subLabel.setFont(new Font("Inter", Font.PLAIN, 14));
+        subLabel.setForeground(TEXT_SECONDARY);
+        subLabel.setHorizontalAlignment(JLabel.CENTER);
         
-        JButton yesButton = createModernButton("Yes, mark completed courses");
-        JButton noButton = createModernButton("No, start fresh");
+        JPanel messagePanel = new JPanel(new GridLayout(2, 1));
+        messagePanel.setBackground(BG_PRIMARY);
+        messagePanel.add(welcomeLabel);
+        messagePanel.add(subLabel);
         
-        yesButton.addActionListener(e -> {
+        // Options
+        JPanel optionsPanel = new JPanel(new GridLayout(3, 1, 10, 10));
+        optionsPanel.setBackground(BG_PRIMARY);
+        optionsPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
+        
+        JButton setupButton = createModernButton("📝 Mark Completed Courses");
+        setupButton.setFont(new Font("Inter", Font.BOLD, 14));
+        setupButton.addActionListener(e -> {
             JOptionPane.getRootFrame().dispose();
-            showInitialCompletedCoursesDialog();
+            showCompleteSetupDialog();
         });
         
-        noButton.addActionListener(e -> {
+        JButton skipButton = createModernButton("⏭️ Skip for Now");
+        skipButton.setFont(new Font("Inter", Font.PLAIN, 14));
+        skipButton.setBackground(TEXT_SECONDARY);
+        skipButton.addActionListener(e -> {
             JOptionPane.getRootFrame().dispose();
+            refreshAll();
         });
         
-        panel.add(welcomeLabel);
-        panel.add(questionLabel);
-        panel.add(new JLabel(""));
-        panel.add(yesButton);
-        panel.add(noButton);
+        optionsPanel.add(setupButton);
+        optionsPanel.add(skipButton);
+        
+        panel.add(messagePanel, BorderLayout.NORTH);
+        panel.add(optionsPanel, BorderLayout.CENTER);
         
         JOptionPane.showOptionDialog(mainFrame, panel, "Welcome", 
             JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, 
             null, new Object[]{}, null);
     }
     
-    private void showInitialCompletedCoursesDialog() {
-        JPanel panel = new JPanel(new GridLayout(0, 3, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    private void showCompleteSetupDialog() {
+        JDialog dialog = new JDialog(mainFrame, "Course Setup", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(BG_PRIMARY);
         
-        String[] commonFirstYear = {"CS101", "CS102", "MATH101", "ENG101"};
-        JTextField[] gradeFields = new JTextField[commonFirstYear.length];
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 20));
+        mainPanel.setBackground(BG_PRIMARY);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
-        panel.add(new JLabel("Course"));
-        panel.add(new JLabel("Completed?"));
-        panel.add(new JLabel("Grade (0-100)"));
+        // Title
+        JLabel titleLabel = new JLabel("Mark Your Completed Courses");
+        titleLabel.setFont(new Font("Inter", Font.BOLD, 18));
+        titleLabel.setForeground(ACCENT_PRIMARY);
         
-        for (int i = 0; i < commonFirstYear.length; i++) {
-            panel.add(new JLabel(commonFirstYear[i]));
+        // Get all courses
+        List<Course> allCourses = plannerApp.courseTree.inOrderTraversal();
+        
+        // Create scrollable panel for courses
+        JPanel coursesPanel = new JPanel(new GridLayout(allCourses.size() + 3, 3, 10, 10));
+        coursesPanel.setBackground(BG_PRIMARY);
+        
+        // Headers
+        coursesPanel.add(new JLabel("Course"));
+        coursesPanel.add(new JLabel("Completed"));
+        coursesPanel.add(new JLabel("Grade"));
+        
+        JCheckBox[] checkBoxes = new JCheckBox[allCourses.size()];
+        JTextField[] gradeFields = new JTextField[allCourses.size()];
+        
+        // Add all courses
+        for (int i = 0; i < allCourses.size(); i++) {
+            Course course = allCourses.get(i);
+            
+            JLabel courseLabel = new JLabel(course.getCode() + " - " + course.getName());
+            courseLabel.setFont(new Font("Inter", Font.PLAIN, 12));
+            coursesPanel.add(courseLabel);
+            
             JCheckBox checkBox = new JCheckBox();
+            checkBox.setBackground(BG_PRIMARY);
             gradeFields[i] = new JTextField(5);
             gradeFields[i].setEnabled(false);
             
@@ -166,44 +217,47 @@ public class CoursePlannerGUI {
                 }
             });
             
-            panel.add(checkBox);
-            panel.add(gradeFields[i]);
+            checkBoxes[i] = checkBox;
+            coursesPanel.add(checkBox);
+            coursesPanel.add(gradeFields[i]);
         }
         
-        // Interests
-        panel.add(new JLabel(""));
-        panel.add(new JLabel(""));
-        panel.add(new JLabel(""));
+        // Interests section
+        coursesPanel.add(new JLabel(""));
+        coursesPanel.add(new JLabel(""));
+        coursesPanel.add(new JLabel(""));
         
-        panel.add(new JLabel("Academic Interests:"));
+        coursesPanel.add(new JLabel("Academic Interests:"));
         JTextField interestsField = new JTextField(20);
-        interestsField.setToolTipText("e.g., Programming, AI, Web Development");
-        panel.add(interestsField);
-        panel.add(new JLabel(""));
+        interestsField.setToolTipText("e.g., Programming, AI, Web Development, Data Science");
+        coursesPanel.add(interestsField);
+        coursesPanel.add(new JLabel(""));
         
-        int result = JOptionPane.showConfirmDialog(mainFrame, panel, 
-            "Mark Completed Courses", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        JScrollPane scrollPane = new JScrollPane(coursesPanel);
+        scrollPane.setPreferredSize(new Dimension(600, 400));
+        scrollPane.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
         
-        if (result == JOptionPane.OK_OPTION) {
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        buttonPanel.setBackground(BG_PRIMARY);
+        
+        JButton saveButton = createModernButton("Save Setup");
+        saveButton.addActionListener(e -> {
             // Process completed courses
-            for (int i = 0; i < commonFirstYear.length; i++) {
-                JCheckBox checkBox = (JCheckBox) ((JPanel)panel).getComponent(i * 3 + 3);
-                if (checkBox.isSelected()) {
+            for (int i = 0; i < allCourses.size(); i++) {
+                if (checkBoxes[i].isSelected()) {
                     String gradeText = gradeFields[i].getText().trim();
                     if (!gradeText.isEmpty()) {
                         try {
                             double grade = Double.parseDouble(gradeText);
                             if (grade >= 0 && grade <= 100) {
-                                String courseCode = commonFirstYear[i];
-                                Course course = plannerApp.courseTree.search(courseCode);
-                                if (course != null) {
-                                    course.setCompleted(true);
-                                    course.setGrade(grade);
-                                    plannerApp.completedCourses.add(courseCode);
-                                    plannerApp.grades.put(courseCode, grade);
-                                }
+                                Course course = allCourses.get(i);
+                                course.setCompleted(true);
+                                course.setGrade(grade);
+                                plannerApp.completedCourses.add(course.getCode());
+                                plannerApp.grades.put(course.getCode(), grade);
                             }
-                        } catch (NumberFormatException e) {
+                        } catch (NumberFormatException ex) {
                             // Skip invalid grades
                         }
                     }
@@ -226,7 +280,30 @@ public class CoursePlannerGUI {
             plannerApp.aiSuggester.setInterests(plannerApp.interests);
             
             refreshAll();
-        }
+            dialog.dispose();
+            
+            JOptionPane.showMessageDialog(mainFrame, 
+                "✓ Setup complete!\n\n" +
+                "• " + plannerApp.completedCourses.size() + " courses marked completed\n" +
+                "• " + plannerApp.interests.size() + " interests saved", 
+                "Success", JOptionPane.INFORMATION_MESSAGE);
+        });
+        
+        JButton cancelButton = createModernButton("Cancel");
+        cancelButton.setBackground(TEXT_SECONDARY);
+        cancelButton.addActionListener(e -> dialog.dispose());
+        
+        buttonPanel.add(saveButton);
+        buttonPanel.add(cancelButton);
+        
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        dialog.add(mainPanel);
+        dialog.setSize(700, 600);
+        dialog.setLocationRelativeTo(mainFrame);
+        dialog.setVisible(true);
     }
     
     private JPanel createNavBar() {
@@ -292,15 +369,12 @@ public class CoursePlannerGUI {
         tabbedPane.setBackground(BG_PRIMARY);
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
         
-        // Courses Tab
         JPanel coursesTab = createCoursesTab();
         tabbedPane.addTab("📋 Courses", coursesTab);
         
-        // Output Tab
         JPanel outputTab = createOutputTab();
         tabbedPane.addTab("📝 Output", outputTab);
         
-        // Quick Actions Tab
         JPanel quickTab = createQuickActionsTab();
         tabbedPane.addTab("⚡ Quick Actions", quickTab);
         
@@ -470,7 +544,6 @@ public class CoursePlannerGUI {
             statusLabel.setText("● Processing...");
             statusLabel.setForeground(WARNING);
             
-            // Extract the actual command (remove emoji and spaces)
             String action = command.replaceAll("[^\\p{L}\\p{N}\\s]", "").trim();
             
             switch (action) {
