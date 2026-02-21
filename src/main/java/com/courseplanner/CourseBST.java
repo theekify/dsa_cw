@@ -2,14 +2,9 @@ package com.courseplanner;
 
 import java.util.*;
 
-/**
- * CourseBST implements a self-balancing AVL Tree for storing courses.
- * This data structure provides O(log n) search, insertion, and deletion.
- * Courses are stored in alphabetical order by course code.
- * HashMap is used alongside for O(1) lookups by course code.
- */
+
 public class CourseBST {
-    // Root of the BST
+    
     private CourseNode root;
 
     // HashMap for fast O(1) lookups by course code
@@ -80,10 +75,7 @@ public class CourseBST {
         return (node != null) ? node.getCourse() : null;
     }
 
-    /**
-     * Get all courses in sorted order (in-order traversal)
-     * @return List of courses sorted by course code
-     */
+    
     public List<Course> inOrderTraversal() {
         List<Course> courses = new ArrayList<>();
         inOrderRec(root, courses);
@@ -269,4 +261,5 @@ public class CourseBST {
             displayTreeRec(node.getRight(), indent, true);
         }
     }
+
 }
