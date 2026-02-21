@@ -50,7 +50,35 @@ public class Course {
         return credits;
     }
 
+    /**
+     * @return Completion status
+     */
+    public boolean isCompleted() {
+        return completed;
+    }
 
+    /**
+     * Set completion status
+     * @param completed New completion status
+     */
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
+
+    /**
+     * @return Grade obtained
+     */
+    public double getGrade() {
+        return grade;
+    }
+
+    /**
+     * Set grade for completed course
+     * @param grade Grade value (0-100)
+     */
+    public void setGrade(double grade) {
+        this.grade = grade;
+    }
 
     /**
      * String representation for display
