@@ -54,30 +54,44 @@ public class PlanExporter {
         writer.close();
     }
 
+    
+    /**
+     * Exports the study plan to a CSV format.
+     * Uses Try-with-Resources to ensure proper file handle disposal.
+     */
     public static void exportToCSV(List<List<Course>> plan, String filename) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-
-        writer.write("Semester,Course Code,Course Name,Credits,Status,Grade");
-        writer.newLine();
-
-        for (int i = 0; i < plan.size(); i++) {
-            List<Course> semester = plan.get(i);
-            for (Course course : semester) {
-                writer.write(String.format("%d,%s,\"%s\",%d,%s,%.1f",
-                        i + 1,
-                        course.getCode(),
-                        course.getName(),
-                        course.getCredits(),
-                        course.isCompleted() ? "Completed" : "Planned",
-                        course.getGrade()
-                ));
-                writer.newLine();
-            }
+        // Defensive Check: Ensure the target directory exists
+        File file = new File(filename);
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
         }
 
-        writer.close();
+        // Try-with-resources: BufferedWriter will auto-close even if an error occurs
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            // Header
+            writer.write("Semester,Course Code,Course Name,Credits,Status,Grade");
+            writer.newLine();
+
+            for (int i = 0; i < plan.size(); i++) {
+                List<Course> semester = plan.get(i);
+                for (Course course : semester) {
+                    // CSV Standard: Use quotes for name in case it contains a comma
+                    writer.write(String.format("%d,%s,\"%s\",%d,%s,%.1f",
+                            i + 1,
+                            course.getCode(),
+                            course.getName(),
+                            course.getCredits(),
+                            course.isCompleted() ? "Completed" : "Planned",
+                            course.getGrade()
+                    ));
+                    writer.newLine();
+                }
+            }
+        } // No writer.close() needed here; handled by Try-with-resources
     }
 
+    
     public static void exportToICS(List<List<Course>> plan, String filename, int startYear) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
 
@@ -229,4 +243,5 @@ public class PlanExporter {
                 .mapToInt(Course::getCredits)
                 .sum();
     }
+
 }
