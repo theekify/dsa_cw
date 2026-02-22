@@ -80,15 +80,19 @@ public class CourseBST {
         return balanceNode(node, courseCode);
     }
 
-    /**
-     * Search for a course by code using HashMap (O(1))
-     * @param code Course code to search
-     * @return Course object if found, null otherwise
-     */
-    public Course search(String code) {
-        CourseNode node = courseMap.get(code);
-        return (node != null) ? node.getCourse() : null;
-    }
+   /**
+ * Search for a course by code using HashMap (O(1)).
+ * Optimization: Added case-insensitivity to handle varied user input.
+ * @param code Course code to search
+ * @return Course object if found, null otherwise
+ */
+public Course search(String code) {
+    if (code == null) return null;
+    
+    // Convert input to uppercase to match the standard format stored in the map
+    CourseNode node = courseMap.get(code.toUpperCase().trim());
+    return (node != null) ? node.getCourse() : null;
+}
 
     
     public List<Course> inOrderTraversal() {
@@ -278,3 +282,4 @@ public class CourseBST {
     }
 
 }
+
