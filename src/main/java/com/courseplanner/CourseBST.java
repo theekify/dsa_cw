@@ -6,8 +6,13 @@ import java.util.*;
 /**
  * CourseBST: Handles the Binary Search Tree logic for Course management.
  * Optimized for O(log n) search and insertion.
+ * Core Data Structure for the Course Planner.
+ * Implements a hybrid AVL Tree and HashMap approach to balance 
+ * sorted data traversal with constant-time search performance.
  * Contribution by: Hiruna
  */
+
+
 public class CourseBST {
     
     private CourseNode root;// The starting point (root) of the Binary Search Tree
@@ -23,28 +28,31 @@ public class CourseBST {
     }
 
     /**
-     * Public method to insert a course into the BST
+     * Public method to insert a course into the BST.
+     * Time Complexity: O(log n) for BST insertion + O(1) for HashMap update.
      * @param course Course to insert
      */
     
-   public void insert(Course course) {
-    if (course == null || course.getCode() == null) {
-        System.err.println("Error: Attempted to insert a null course.");
-        return;
-    }
+    public void insert(Course course) {
+        // Step 1: Validate data integrity using the helper method
+        if (!isValidCourse(course)) {
+            System.err.println("Error: Attempted to insert an invalid or null course.");
+            return;
+        }
 
-    // Pass the course to the recursive logic
-    root = insertRec(root, course);
-    
-    // Optimization: Instead of searching the tree again, 
-    // we leverage the fact that insertion is complete.
-    // Note: To make this even faster in the future, we could 
-    // modify insertRec to return the created node.
-    CourseNode node = searchNode(course.getCode());
-    if (node != null) {
-        courseMap.put(course.getCode(), node);
+        // Step 2: Perform the recursive AVL insertion
+        root = insertRec(root, course);
+        
+        // Step 3: Log the event for system traceability
+        logEvent("Inserted course: " + course.getCode());
+
+        // Step 4: Synchronize the HashMap for O(1) searching
+        // We use toUpperCase().trim() to ensure search consistency
+        CourseNode node = searchNode(course.getCode());
+        if (node != null) {
+            courseMap.put(course.getCode().toUpperCase().trim(), node);
+        }
     }
-}
 
     /**
      * Recursive helper for insertion with AVL balancing
@@ -80,15 +88,19 @@ public class CourseBST {
         return balanceNode(node, courseCode);
     }
 
-    /**
-     * Search for a course by code using HashMap (O(1))
-     * @param code Course code to search
-     * @return Course object if found, null otherwise
+    
+  /**
+     * Retrieves a course by its unique code.
+     * Time Complexity: O(1) average case via HashMap lookup.
+     * Includes input normalization to handle case-insensitivity.
      */
-    public Course search(String code) {
-        CourseNode node = courseMap.get(code);
-        return (node != null) ? node.getCourse() : null;
-    }
+public Course search(String code) {
+    if (code == null) return null;
+    
+    // Convert input to uppercase to match the standard format stored in the map
+    CourseNode node = courseMap.get(code.toUpperCase().trim());
+    return (node != null) ? node.getCourse() : null;
+}
 
     
     public List<Course> inOrderTraversal() {
@@ -190,6 +202,8 @@ public class CourseBST {
      * Balance a node using AVL rotations
      * @param node Node to balance
      * @param insertedCode Code of newly inserted course
+     * Maintains the AVL property by checking balance factors and 
+     * performing necessary rotations (LL, RR, LR, RL).
      * @return Balanced node
      */
     private CourseNode balanceNode(CourseNode node, String insertedCode) {
@@ -277,4 +291,44 @@ public class CourseBST {
         }
     }
 
+    /**
+     * Returns the total number of courses currently stored in the BST.
+     * Demonstrates O(1) complexity by leveraging the HashMap's size.
+     */
+    public int getCourseCount() {
+        return courseMap.size();
+    }
+
+    /**
+     * Checks if the BST is currently empty.
+     * Professional utility for UI state management.
+     */
+    public boolean isEmpty() {
+        return root == null;
+    }
+
+    /**
+     * Internal logger for system events. 
+     * Centralizing this allows for easy integration with logging frameworks later.
+     */
+    private void logEvent(String message) {
+        System.out.println("[CourseBST-LOG] " + java.time.LocalDateTime.now() + ": " + message);
+    }
+
+    /**
+     * Validates course data integrity before processing.
+     * @return true if data is valid, false otherwise.
+     */
+    private boolean isValidCourse(Course course) {
+        if (course == null || course.getCode() == null) return false;
+        return !course.getCode().trim().isEmpty() && course.getCode().length() >= 2;
+    }
+
 }
+
+
+
+
+
+
+
