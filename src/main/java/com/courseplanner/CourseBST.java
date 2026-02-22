@@ -27,7 +27,8 @@ public class CourseBST {
      * Public method to insert a course into the BST
      * @param course Course to insert
      */
-    public void insert(Course course) {
+    public void insert(Course course)// Logic to ensure the tree remains a valid BST during insertion
+    {
         root = insertRec(root, course);
         // Also store in HashMap for O(1) access
         CourseNode node = searchNode(course.getCode());
@@ -268,4 +269,5 @@ public class CourseBST {
     }
 
 }
+
 
