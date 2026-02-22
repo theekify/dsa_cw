@@ -27,15 +27,22 @@ public class CourseBST {
      * Public method to insert a course into the BST
      * @param course Course to insert
      */
-    public void insert(Course course)// Logic to ensure the tree remains a valid BST during insertion
-    {
-        root = insertRec(root, course);
-        // Also store in HashMap for O(1) access
-        CourseNode node = searchNode(course.getCode());
-        if (node != null) {
-            courseMap.put(course.getCode(), node);
-        }
+    
+    public void insert(Course course) {
+    // Safety check: Prevent NullPointerException if invalid data is passed
+    if (course == null || course.getCode() == null) {
+        System.err.println("Error: Attempted to insert a null course or code.");
+        return;
     }
+
+    root = insertRec(root, course);
+
+    // Ensure the HashMap stays in sync with the BST
+    CourseNode node = searchNode(course.getCode());
+    if (node != null) {
+        courseMap.put(course.getCode(), node);
+    }
+}
 
     /**
      * Recursive helper for insertion with AVL balancing
@@ -269,5 +276,6 @@ public class CourseBST {
     }
 
 }
+
 
 
