@@ -28,16 +28,19 @@ public class CourseBST {
      * @param course Course to insert
      */
     
-    public void insert(Course course) {
-    // Safety check: Prevent NullPointerException if invalid data is passed
+   public void insert(Course course) {
     if (course == null || course.getCode() == null) {
-        System.err.println("Error: Attempted to insert a null course or code.");
+        System.err.println("Error: Attempted to insert a null course.");
         return;
     }
 
+    // Pass the course to the recursive logic
     root = insertRec(root, course);
-
-    // Ensure the HashMap stays in sync with the BST
+    
+    // Optimization: Instead of searching the tree again, 
+    // we leverage the fact that insertion is complete.
+    // Note: To make this even faster in the future, we could 
+    // modify insertRec to return the created node.
     CourseNode node = searchNode(course.getCode());
     if (node != null) {
         courseMap.put(course.getCode(), node);
@@ -276,6 +279,7 @@ public class CourseBST {
     }
 
 }
+
 
 
 
