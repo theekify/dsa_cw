@@ -2,13 +2,7 @@ package com.courseplanner;
 
 import java.util.*;
 
-/**
- * AISuggester provides intelligent course recommendations using:
- * - Student's past performance in prerequisites
- * - Student's stated interests
- * - Course difficulty and popularity
- * - PriorityQueue for efficient ranking
- */
+
 public class AISuggester {
     private CourseBST courseTree;
     private PrerequisiteGraph graph;
@@ -293,4 +287,5 @@ public class AISuggester {
     }
 
 }
+
 
