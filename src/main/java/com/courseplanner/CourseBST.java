@@ -33,6 +33,12 @@ public class CourseBST {
      */
     
    public void insert(Course course) {
+
+    if (isInvalid(course)) {
+        System.err.println("Error: Invalid course data provided.");
+        return;
+        
+    }
     if (course == null || course.getCode() == null) {
         System.err.println("Error: Attempted to insert a null course.");
         return;
@@ -314,6 +320,7 @@ public Course search(String code) {
     }
 
 }
+
 
 
 
