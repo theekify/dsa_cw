@@ -28,35 +28,31 @@ public class CourseBST {
     }
 
     /**
-     * Public method to insert a course into the BST
+     * Public method to insert a course into the BST.
+     * Time Complexity: O(log n) for BST insertion + O(1) for HashMap update.
      * @param course Course to insert
      */
     
-   public void insert(Course course) {
+    public void insert(Course course) {
+        // Step 1: Validate data integrity using the helper method
+        if (!isValidCourse(course)) {
+            System.err.println("Error: Attempted to insert an invalid or null course.");
+            return;
+        }
 
-    if (isInvalid(course)) {
-        System.err.println("Error: Invalid course data provided.");
-        return;
+        // Step 2: Perform the recursive AVL insertion
+        root = insertRec(root, course);
         
+        // Step 3: Log the event for system traceability
+        logEvent("Inserted course: " + course.getCode());
+
+        // Step 4: Synchronize the HashMap for O(1) searching
+        // We use toUpperCase().trim() to ensure search consistency
+        CourseNode node = searchNode(course.getCode());
+        if (node != null) {
+            courseMap.put(course.getCode().toUpperCase().trim(), node);
+        }
     }
-    if (course == null || course.getCode() == null) {
-        System.err.println("Error: Attempted to insert a null course.");
-        return;
-    }
-    
-    // Pass the course to the recursive logic
-    root = insertRec(root, course);
-    logEvent("Inserted course: " + course.getCode());
-    
-    // Optimization: Instead of searching the tree again, 
-    // we leverage the fact that insertion is complete.
-    // Note: To make this even faster in the future, we could 
-    // modify insertRec to return the created node.
-    CourseNode node = searchNode(course.getCode());
-    if (node != null) {
-        courseMap.put(course.getCode(), node);
-    }
-}
 
     /**
      * Recursive helper for insertion with AVL balancing
@@ -329,6 +325,7 @@ public Course search(String code) {
     }
 
 }
+
 
 
 
