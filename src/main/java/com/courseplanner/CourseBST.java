@@ -319,7 +319,17 @@ public Course search(String code) {
         System.out.println("[CourseBST-LOG] " + java.time.LocalDateTime.now() + ": " + message);
     }
 
+    /**
+     * Validates course data integrity before processing.
+     * @return true if data is valid, false otherwise.
+     */
+    private boolean isValidCourse(Course course) {
+        if (course == null || course.getCode() == null) return false;
+        return !course.getCode().trim().isEmpty() && course.getCode().length() >= 2;
+    }
+
 }
+
 
 
 
