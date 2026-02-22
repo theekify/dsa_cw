@@ -80,15 +80,5 @@ public class Course {
         this.grade = grade;
     }
 
-    /**
-     * String representation for display
-     * @return Formatted course information
-     */
-    @Override
-    public String toString() {
-        String status = completed ? "✓" : "○";
-        return String.format("%s %s: %s (%d credits) %s",
-                status, code, name, credits,
-                completed ? String.format("[Grade: %.1f%%]", grade) : "");
-    }
+
 }
