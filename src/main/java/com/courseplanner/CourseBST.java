@@ -9,11 +9,10 @@ import java.util.*;
  * HashMap is used alongside for O(1) lookups by course code.
  */
 public class CourseBST {
-    // Root of the BST
-    private CourseNode root;
+    
+    private CourseNode root;// The starting point (root) of the Binary Search Tree
 
-    // HashMap for fast O(1) lookups by course code
-    private HashMap<String, CourseNode> courseMap;
+    private HashMap<String, CourseNode> courseMap;// Used for fast O(1) lookups by course code
 
     /**
      * Constructor initializes empty tree
@@ -269,4 +268,5 @@ public class CourseBST {
             displayTreeRec(node.getRight(), indent, true);
         }
     }
+
 }
