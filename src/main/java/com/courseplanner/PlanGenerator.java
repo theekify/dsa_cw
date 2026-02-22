@@ -10,11 +10,7 @@ public class PlanGenerator {
     private static final int MAX_CREDITS_PER_SEMESTER = 18;
     private static final int MIN_CREDITS_PER_SEMESTER = 12;
 
-    /**
-     * Constructor
-     * @param courseTree BST containing all courses
-     * @param graph Prerequisite graph
-     */
+    
     public PlanGenerator(CourseBST courseTree, PrerequisiteGraph graph) {
         this.courseTree = courseTree;
         this.graph = graph;
@@ -264,3 +260,4 @@ public class PlanGenerator {
     }
 
 }
+
