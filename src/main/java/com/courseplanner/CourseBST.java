@@ -6,8 +6,13 @@ import java.util.*;
 /**
  * CourseBST: Handles the Binary Search Tree logic for Course management.
  * Optimized for O(log n) search and insertion.
+ * Core Data Structure for the Course Planner.
+ * Implements a hybrid AVL Tree and HashMap approach to balance 
+ * sorted data traversal with constant-time search performance.
  * Contribution by: Hiruna
  */
+
+
 public class CourseBST {
     
     private CourseNode root;// The starting point (root) of the Binary Search Tree
@@ -80,12 +85,12 @@ public class CourseBST {
         return balanceNode(node, courseCode);
     }
 
-   /**
- * Search for a course by code using HashMap (O(1)).
- * Optimization: Added case-insensitivity to handle varied user input.
- * @param code Course code to search
- * @return Course object if found, null otherwise
- */
+    
+  /**
+     * Retrieves a course by its unique code.
+     * Time Complexity: O(1) average case via HashMap lookup.
+     * Includes input normalization to handle case-insensitivity.
+     */
 public Course search(String code) {
     if (code == null) return null;
     
@@ -194,6 +199,8 @@ public Course search(String code) {
      * Balance a node using AVL rotations
      * @param node Node to balance
      * @param insertedCode Code of newly inserted course
+     * Maintains the AVL property by checking balance factors and 
+     * performing necessary rotations (LL, RR, LR, RL).
      * @return Balanced node
      */
     private CourseNode balanceNode(CourseNode node, String insertedCode) {
@@ -298,5 +305,6 @@ public Course search(String code) {
     }
 
 }
+
 
 
