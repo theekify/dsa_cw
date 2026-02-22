@@ -2,34 +2,21 @@ package com.courseplanner;
 
 import java.util.*;
 
-/**
- * PrerequisiteGraph manages course prerequisite relationships using adjacency lists.
- * This graph implementation supports:
- * - Adding prerequisite relationships
- * - Cycle detection to prevent impossible course sequences
- * - Topological sorting for course ordering
- * - Finding dependent courses
- */
+
 public class PrerequisiteGraph {
-    // Adjacency list: course -> list of prerequisites
+    
     private HashMap<String, List<String>> adjList;
 
     // Reverse adjacency list: prerequisite -> list of courses that require it
     private HashMap<String, List<String>> reverseAdjList;
 
-    /**
-     * Constructor initializes empty graph
-     */
+    
     public PrerequisiteGraph() {
         this.adjList = new HashMap<>();
         this.reverseAdjList = new HashMap<>();
     }
 
-    /**
-     * Add a prerequisite relationship
-     * @param course Course that requires the prerequisite
-     * @param prerequisite Required course
-     */
+    
     public void addPrerequisite(String course, String prerequisite) {
         // Add to forward adjacency list
         adjList.computeIfAbsent(course, k -> new ArrayList<>()).add(prerequisite);
@@ -218,4 +205,5 @@ public class PrerequisiteGraph {
             }
         }
     }
+
 }
