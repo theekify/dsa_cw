@@ -281,5 +281,22 @@ public Course search(String code) {
         }
     }
 
+    /**
+     * Returns the total number of courses currently stored in the BST.
+     * Demonstrates O(1) complexity by leveraging the HashMap's size.
+     */
+    public int getCourseCount() {
+        return courseMap.size();
+    }
+
+    /**
+     * Checks if the BST is currently empty.
+     * Professional utility for UI state management.
+     */
+    public boolean isEmpty() {
+        return root == null;
+    }
+
 }
+
 
