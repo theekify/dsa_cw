@@ -37,9 +37,10 @@ public class CourseBST {
         System.err.println("Error: Attempted to insert a null course.");
         return;
     }
-
+    
     // Pass the course to the recursive logic
     root = insertRec(root, course);
+    logEvent("Inserted course: " + course.getCode());
     
     // Optimization: Instead of searching the tree again, 
     // we leverage the fact that insertion is complete.
@@ -304,7 +305,16 @@ public Course search(String code) {
         return root == null;
     }
 
+    /**
+     * Internal logger for system events. 
+     * Centralizing this allows for easy integration with logging frameworks later.
+     */
+    private void logEvent(String message) {
+        System.out.println("[CourseBST-LOG] " + java.time.LocalDateTime.now() + ": " + message);
+    }
+
 }
+
 
 
 
