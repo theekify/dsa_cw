@@ -2,11 +2,7 @@ package com.courseplanner;
 
 import java.util.*;
 
-/**
- * PlanGenerator creates optimal semester plans using graph algorithms.
- * It considers prerequisites, credit limits, and course availability.
- * Uses topological sort and greedy algorithms for scheduling.
- */
+
 public class PlanGenerator {
     private CourseBST courseTree;
     private PrerequisiteGraph graph;
@@ -14,11 +10,7 @@ public class PlanGenerator {
     private static final int MAX_CREDITS_PER_SEMESTER = 18;
     private static final int MIN_CREDITS_PER_SEMESTER = 12;
 
-    /**
-     * Constructor
-     * @param courseTree BST containing all courses
-     * @param graph Prerequisite graph
-     */
+    
     public PlanGenerator(CourseBST courseTree, PrerequisiteGraph graph) {
         this.courseTree = courseTree;
         this.graph = graph;
@@ -266,4 +258,6 @@ public class PlanGenerator {
                 .mapToInt(Course::getCredits)
                 .sum();
     }
+
 }
+

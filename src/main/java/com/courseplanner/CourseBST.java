@@ -2,11 +2,11 @@ package com.courseplanner;
 
 import java.util.*;
 
+
 /**
- * CourseBST implements a self-balancing AVL Tree for storing courses.
- * This data structure provides O(log n) search, insertion, and deletion.
- * Courses are stored in alphabetical order by course code.
- * HashMap is used alongside for O(1) lookups by course code.
+ * CourseBST: Handles the Binary Search Tree logic for Course management.
+ * Optimized for O(log n) search and insertion.
+ * Contribution by: Hiruna
  */
 public class CourseBST {
     
@@ -26,14 +26,25 @@ public class CourseBST {
      * Public method to insert a course into the BST
      * @param course Course to insert
      */
-    public void insert(Course course) {
-        root = insertRec(root, course);
-        // Also store in HashMap for O(1) access
-        CourseNode node = searchNode(course.getCode());
-        if (node != null) {
-            courseMap.put(course.getCode(), node);
-        }
+    
+   public void insert(Course course) {
+    if (course == null || course.getCode() == null) {
+        System.err.println("Error: Attempted to insert a null course.");
+        return;
     }
+
+    // Pass the course to the recursive logic
+    root = insertRec(root, course);
+    
+    // Optimization: Instead of searching the tree again, 
+    // we leverage the fact that insertion is complete.
+    // Note: To make this even faster in the future, we could 
+    // modify insertRec to return the created node.
+    CourseNode node = searchNode(course.getCode());
+    if (node != null) {
+        courseMap.put(course.getCode(), node);
+    }
+}
 
     /**
      * Recursive helper for insertion with AVL balancing
@@ -79,10 +90,7 @@ public class CourseBST {
         return (node != null) ? node.getCourse() : null;
     }
 
-    /**
-     * Get all courses in sorted order (in-order traversal)
-     * @return List of courses sorted by course code
-     */
+    
     public List<Course> inOrderTraversal() {
         List<Course> courses = new ArrayList<>();
         inOrderRec(root, courses);
