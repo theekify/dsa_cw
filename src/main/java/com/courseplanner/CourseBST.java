@@ -3,6 +3,11 @@ package com.courseplanner;
 import java.util.*;
 
 
+/**
+ * CourseBST: Handles the Binary Search Tree logic for Course management.
+ * Optimized for O(log n) search and insertion.
+ * Contribution by: Hiruna
+ */
 public class CourseBST {
     
     private CourseNode root;
@@ -263,3 +268,4 @@ public class CourseBST {
     }
 
 }
+
