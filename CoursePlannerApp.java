@@ -73,7 +73,20 @@ public class CoursePlannerApp {
         Course course = new Course(code, name, credits);
         courseTree.insert(course);
 
+        if (!prerequisites.isEmpty()) {
+            String[] prereqArray = prerequisites.split(",");
+            for (String prereq : prereqArray) {
+                prerequisiteGraph.addPrerequisite(code, prereq.trim());
+            }
+        }
+    }
 
+    private void updateComponents() {
+        planGenerator.setCompletedCourses(completedCourses);
+        aiSuggester.setCompletedCourses(completedCourses);
+        aiSuggester.setGrades(grades);
+        aiSuggester.setInterests(interests);
+    }
 
     // Keep the run() method for terminal mode if needed
     public void run() {
