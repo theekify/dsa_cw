@@ -17,19 +17,12 @@ public class PlanGenerator {
         this.completedCourses = new ArrayList<>();
     }
 
-    /**
-     * Set completed courses
-     * @param completedCourses List of completed course codes
-     */
+
     public void setCompletedCourses(List<String> completedCourses) {
         this.completedCourses = new ArrayList<>(completedCourses);
     }
 
-    /**
-     * Check if a course can be taken based on completed prerequisites
-     * @param courseCode Course to check
-     * @return true if all prerequisites are completed
-     */
+   
     public boolean canTakeCourse(String courseCode) {
         Course course = courseTree.search(courseCode);
         if (course == null || course.isCompleted()) {
@@ -45,11 +38,7 @@ public class PlanGenerator {
         return true;
     }
 
-    /**
-     * Get missing prerequisites for a course
-     * @param courseCode Course to check
-     * @return List of missing prerequisite codes
-     */
+ 
     public List<String> getMissingPrerequisites(String courseCode) {
         List<String> missing = new ArrayList<>();
         List<String> prerequisites = graph.getPrerequisites(courseCode);
@@ -260,4 +249,5 @@ public class PlanGenerator {
     }
 
 }
+
 
