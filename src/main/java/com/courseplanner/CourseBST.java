@@ -10,10 +10,9 @@ import java.util.*;
  */
 public class CourseBST {
     
-    private CourseNode root;
+    private CourseNode root;// The starting point (root) of the Binary Search Tree
 
-    // HashMap for fast O(1) lookups by course code
-    private HashMap<String, CourseNode> courseMap;
+    private HashMap<String, CourseNode> courseMap;// Used for fast O(1) lookups by course code
 
     /**
      * Constructor initializes empty tree
@@ -279,7 +278,3 @@ public class CourseBST {
     }
 
 }
-
-
-
-
