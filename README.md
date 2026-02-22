@@ -9,8 +9,8 @@ A Java application that helps students plan their academic journey by tracking p
 - **✅ Prerequisite Check** - Instant eligibility validation
 - **📅 Study Plan** - Automatic semester-by-semester planning
 - **🤖 AI Suggestions** - Personalized course recommendations
-- **📤 Export** - TXT, CSV, iCalendar formats
-- **🎨 GUI & Console** - Both interfaces available
+- **📤 Export** - TXT, CSV formats
+- **🎨 GUI** - interface available
 
 ---
 
