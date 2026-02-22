@@ -27,14 +27,14 @@ public class CoursePlannerApp {
         this.grades = new HashMap<>();
         this.interests = new ArrayList<>();
 
-        // Load saved progress silently (no terminal output)
+     
         try {
             PlanExporter.loadProgress(PROGRESS_FILE, completedCourses, grades, interests);
         } catch (IOException e) {
-            // Silently fail - no saved progress yet
+        
         }
 
-        // Initialize with sample courses (no terminal prompts)
+
         initializeWithSampleCourses();
         
         // Update components with loaded data
@@ -93,3 +93,4 @@ public class CoursePlannerApp {
         // This is for terminal mode - we won't use it in GUI
     }
 }
+
